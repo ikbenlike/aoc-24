@@ -9,26 +9,14 @@ getAllLines path = do
 toVector :: [String] -> V.Vector (V.Vector Char)
 toVector x = V.fromListN (length x) $ map (\x -> V.fromListN (length x) x) x
 
-{-checkHorizontal :: String -> V.Vector Char -> Int -> Bool
-checkHorizontal s v i = f s v i True
-  where f [] _ _ b = b
-        f (x:xs) v i b = b && f xs v (i + 1) (maybe False (x==) (v !? i))
-
-checkVertical :: String -> V.Vector (V.Vector Char) -> Int -> Int -> Bool
-checkVertical s v l i = f s v l True
-  where f [] _ _ b = b
-        f (x:xs) v l b = case v !? l of
-                           Just line -> b && f xs v (l + 1) (maybe False (x==) (line !? i))
-                           Nothing -> False-}
-
---checkWord :: String -> V.Vector (V.Vector Char) -> Int -> Int -> (Int -> Int) -> (Int -> Int) ->Bool
+checkWord :: String -> V.Vector (V.Vector Char) -> Int -> Int -> (Int -> Int) -> (Int -> Int) ->Bool
 checkWord s v x y dx dy = f s x y True
   where f [] _ _ b = b
         f (s:xs) x y b = case v !? y of
                            Just l -> b && f xs (dx x) (dy y) (maybe False (s==) (l !? x))
                            Nothing -> False
 
-{-checkHorizontal :: String -> V.Vector (V.Vector Char) -> Int -> Int -> Bool
+checkHorizontal :: String -> V.Vector (V.Vector Char) -> Int -> Int -> Bool
 checkHorizontal s v x y = checkWord s v x y (+1) id
 
 checkVertical :: String -> V.Vector (V.Vector Char) -> Int -> Int -> Bool
@@ -38,9 +26,19 @@ checkDownDiag :: String -> V.Vector (V.Vector Char) -> Int -> Int -> Bool
 checkDownDiag s v x y = checkWord s v x y (+1) (+1)
 
 checkUpDiag :: String -> V.Vector (V.Vector Char) -> Int -> Int -> Bool
-checkUpDiag s v x y = checkWord s v x y (+1) ((-) 1)
+checkUpDiag s v x y = checkWord s v x y (+1) (subtract 1)
 
-checkLeftDiag :: String -> V.Vector (V.Vector Char) -> Int -> Int -> Bool
-checkLeftDiag s v x y = checkWord s v x y ((-) 1) ((+) 1)-}
+walkGrid :: V.Vector (V.Vector Char) -> Int
+walkGrid g = f 0 0
+  where ymax = length g
+        xmax = length (g ! 0)
+        f x y | x < xmax && y < ymax = f (x + 1) y
+                                       + fromEnum (checkHorizontal "XMAS" g x y || checkHorizontal "SAMX" g x y)
+                                       + fromEnum (checkVertical "XMAS" g x y || checkVertical "SAMX" g x y)
+                                       + fromEnum (checkDownDiag "XMAS" g x y || checkDownDiag "SAMX" g x y)
+                                       + fromEnum (checkUpDiag "XMAS" g x y || checkUpDiag "SAMX" g x y)
+              | x == xmax = f 0 (y + 1)
+              | y == ymax = 0
+                                       
 
 final1 fp = toVector  <$> getAllLines fp
