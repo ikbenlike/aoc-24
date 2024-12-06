@@ -32,13 +32,14 @@ walkGrid :: V.Vector (V.Vector Char) -> Int
 walkGrid g = f 0 0
   where ymax = length g
         xmax = length (g ! 0)
-        f x y | x < xmax && y < ymax = f (x + 1) y
-                                       + fromEnum (checkHorizontal "XMAS" g x y || checkHorizontal "SAMX" g x y)
-                                       + fromEnum (checkVertical "XMAS" g x y || checkVertical "SAMX" g x y)
-                                       + fromEnum (checkDownDiag "XMAS" g x y || checkDownDiag "SAMX" g x y)
-                                       + fromEnum (checkUpDiag "XMAS" g x y || checkUpDiag "SAMX" g x y)
+        f x y | x < xmax && y < ymax =
+                let helper s f = fromEnum $ f s g x y
+                    fns = [checkHorizontal, checkVertical, checkDownDiag, checkUpDiag]
+                    d = foldr (+) 0 $ map (helper "XMAS") fns ++ map (helper "SAMX") fns
+                in
+                  d + f (x + 1) y
               | x == xmax = f 0 (y + 1)
               | y == ymax = 0
                                        
 
-final1 fp = toVector  <$> getAllLines fp
+final1 fp = walkGrid <$> toVector  <$> getAllLines fp
